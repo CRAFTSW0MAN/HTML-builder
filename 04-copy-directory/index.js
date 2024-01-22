@@ -43,12 +43,11 @@ fs.readdir(dirPath, { withFileTypes: true }, (error, files) => {
             const pathFileCopy = path.join(dirCopyPath, file.name);
             fs.copyFile(pathFile, pathFileCopy, (copyError) => {
                 if (copyError) {
-                    console.error(copyErr.message);
-                } else {
-                    console.log(`${file.name} has been successfully copied.`);
+                    console.error(copyError.message);
+                    return;
                 }
+                console.log(`${file.name} has been successfully copied.`);
             });
         }
     })
-
 });

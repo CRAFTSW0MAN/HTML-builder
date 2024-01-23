@@ -19,9 +19,12 @@ readTemplate.on('data', (data) => {
 });
 
 function createMkdir(data) {
-  fs.mkdir(data, { recursive: true }, (error) =>
-    console.log(`Error ${error.message}`),
-  );
+  fs.mkdir(data, { recursive: true }, (error) => {
+    if (error) {
+      console.error(error.message);
+      return;
+    }
+  });
 }
 
 function copyFiles(data, originData) {
@@ -46,9 +49,12 @@ function copyFiles(data, originData) {
         const readStream = fs.createReadStream(pathFile, 'utf-8');
         readStream.on('data', (chunk) => {
           stringIndex = stringIndex.replaceAll(section, chunk);
-          fs.writeFile(data, stringIndex, (error) =>
-            console.log(`Error ${error.message}`),
-          );
+          fs.writeFile(data, stringIndex, (error) => {
+            if (error) {
+              console.error(error.message);
+              return;
+            }
+          });
         });
         readStream.on('error', (error) =>
           console.log(`Error ${error.message}`),
@@ -75,10 +81,14 @@ function copyFilesDirectory(data, originData) {
         );
       } else {
         if (file.isFile()) {
+          console.log(data, originData);
           const pathFileCopy = path.join(data, file.name);
-          fs.copyFile(pathFile, pathFileCopy, (error) =>
-            console.log(`Error ${error.message}`),
-          );
+          fs.copyFile(pathFile, pathFileCopy, (copyError) => {
+            if (copyError) {
+              console.error(copyError.message);
+              return;
+            }
+          });
         }
       }
     });

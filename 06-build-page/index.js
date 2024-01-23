@@ -13,80 +13,79 @@ const newAssetsPath = path.join(projectDistePath, 'assets');
 
 const writeStyle = fs.createWriteStream(newSlylePath);
 const readTemplate = fs.createReadStream(templatePath);
-let strData = '';
+let stringIndex = '';
 readTemplate.on('data', (data) => {
-    strData = data.toString();
-})
+  stringIndex = data.toString();
+});
 
 function createMkdir(data) {
-    fs.mkdir(data, { recursive: true }, (error) => {
-        if (error) {
-            console.error(error.message);
-            return;
-        }
-    });
+  fs.mkdir(data, { recursive: true }, (error) =>
+    console.log(`Error ${error.message}`),
+  );
 }
 
 function copyFiles(data, originData) {
-    fs.readdir(originData, { withFileTypes: true }, (error, files) => {
-        if (error) {
-            console.error(error.message);
-            return;
-        }
+  fs.readdir(originData, { withFileTypes: true }, (error, files) => {
+    if (error) {
+      console.error(error.message);
+      return;
+    }
 
-        files.forEach(file => {
-            const pathFile = path.join(originData, file.name);
-            const extname = path.extname(pathFile);
-            if (extname === '.css') {
-                const readStream = fs.createReadStream(pathFile);
-                readStream.on('data', (chunk) => writeStyle.write(chunk));
-                readStream.on('error', error => console.log(`Error ${error.message}`));
-            }
-            if (extname === '.html') {
-                const section = `{{${file.name.replace(extname, '')}}}`;
-                const readStream = fs.createReadStream(pathFile, 'utf-8');
-                readStream.on('data', (chunk) => {
-                    strData = strData.replaceAll(section, chunk);
-                    fs.writeFile(data, strData, () => { });
-                });
-                readStream.on('error', error => console.log(`Error ${error.message}`));
-            }
-        })
+    files.forEach((file) => {
+      const pathFile = path.join(originData, file.name);
+      const extname = path.extname(pathFile);
+      if (extname === '.css') {
+        const readStream = fs.createReadStream(pathFile);
+        readStream.on('data', (chunk) => writeStyle.write(chunk));
+        readStream.on('error', (error) =>
+          console.log(`Error ${error.message}`),
+        );
+      }
+      if (extname === '.html') {
+        const section = `{{${file.name.replace(extname, '')}}}`;
+        const readStream = fs.createReadStream(pathFile, 'utf-8');
+        readStream.on('data', (chunk) => {
+          stringIndex = stringIndex.replaceAll(section, chunk);
+          fs.writeFile(data, stringIndex, (error) =>
+            console.log(`Error ${error.message}`),
+          );
+        });
+        readStream.on('error', (error) =>
+          console.log(`Error ${error.message}`),
+        );
+      }
     });
-
+  });
 }
 
 function copyFilesDirectory(data, originData) {
-    fs.readdir(originData, { withFileTypes: true }, (error, files) => {
-        if (error) {
-            console.error(error.message);
-            return;
-        }
+  fs.readdir(originData, { withFileTypes: true }, (error, files) => {
+    if (error) {
+      console.error(error.message);
+      return;
+    }
 
-        files.forEach(file => {
-            const pathFile = path.join(originData, file.name);
-            const extname = path.extname(pathFile);
-            if (file.isDirectory()) {
-                createMkdir(path.join(data, file.name));
-                copyFilesDirectory(path.join(data, file.name), path.join(originData, file.name))
-            } else {
-                if (file.isFile()) {
-                    console.log(data, originData);
-                    const pathFileCopy = path.join(data, file.name);
-                    fs.copyFile(pathFile, pathFileCopy, (copyError) => {
-                        if (copyError) {
-                            console.error(copyError.message);
-                            return;
-                        }
-                    });
-                }
-            }
-        })
+    files.forEach((file) => {
+      const pathFile = path.join(originData, file.name);
+      if (file.isDirectory()) {
+        createMkdir(path.join(data, file.name));
+        copyFilesDirectory(
+          path.join(data, file.name),
+          path.join(originData, file.name),
+        );
+      } else {
+        if (file.isFile()) {
+          const pathFileCopy = path.join(data, file.name);
+          fs.copyFile(pathFile, pathFileCopy, (error) =>
+            console.log(`Error ${error.message}`),
+          );
+        }
+      }
     });
+  });
 }
 createMkdir(projectDistePath);
 createMkdir(newAssetsPath);
 copyFiles(newSlylePath, stylesPath);
 copyFiles(newIndexPath, componentsPath);
 copyFilesDirectory(newAssetsPath, assetsPath);
-

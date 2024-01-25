@@ -18,12 +18,23 @@ readTemplate.on('data', (data) => {
   stringIndex = data.toString();
 });
 
-function createMkdir(data) {
+function createMkdir1(data) {
   fs.mkdir(data, { recursive: true }, (error) => {
     if (error) {
       console.error(error.message);
       return;
     }
+    copyFiles(newSlylePath, stylesPath);
+    copyFiles(newIndexPath, componentsPath);
+  });
+}
+function createMkdir2(data, callbackData, originData) {
+  fs.mkdir(data, { recursive: true }, (error) => {
+    if (error) {
+      console.error(error.message);
+      return;
+    }
+    copyFilesDirectory(callbackData, originData);
   });
 }
 
@@ -74,14 +85,17 @@ function copyFilesDirectory(data, originData) {
     files.forEach((file) => {
       const pathFile = path.join(originData, file.name);
       if (file.isDirectory()) {
-        createMkdir(path.join(data, file.name));
         copyFilesDirectory(
+          path.join(data, file.name),
+          path.join(originData, file.name),
+        );
+        createMkdir2(
+          path.join(data, file.name),
           path.join(data, file.name),
           path.join(originData, file.name),
         );
       } else {
         if (file.isFile()) {
-          console.log(data, originData);
           const pathFileCopy = path.join(data, file.name);
           fs.copyFile(pathFile, pathFileCopy, (copyError) => {
             if (copyError) {
@@ -94,8 +108,6 @@ function copyFilesDirectory(data, originData) {
     });
   });
 }
-createMkdir(projectDistePath);
-createMkdir(newAssetsPath);
-copyFiles(newSlylePath, stylesPath);
-copyFiles(newIndexPath, componentsPath);
-copyFilesDirectory(newAssetsPath, assetsPath);
+
+createMkdir1(projectDistePath);
+createMkdir2(newAssetsPath, newAssetsPath, assetsPath);
